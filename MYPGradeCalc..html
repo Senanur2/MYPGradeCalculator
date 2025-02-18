@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IB MYP Grade Calculator</title>
+    <style>
+        :root {
+            --main-medium: #BCB8B1;
+            --main-light: #F4F3EE;
+            --accent: #E0AFA0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--main-light);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--main-medium);
+        }
+
+        .button {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .button:hover {
+            background-color: #d2958f;
+        }
+
+        .back-button {
+            width: 100%;
+            background-color: var(--main-medium);
+            margin-top: 20px;
+        }
+
+        .button, .back-button {
+            transition: background-color 0.3s ease;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section input, .section select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .section label {
+            font-size: 16px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>IB MYP Grade Calculator</h1>
+
+        <div id="menu">
+            <div class="section">
+                <button class="button" onclick="addNewSubject()">Add New Subject</button>
+                <button class="button" onclick="enterGrades()">Enter Grades for a Subject</button>
+                <button class="button" onclick="viewReportCard()">View Predicted Report Card</button>
+            </div>
+        </div>
+
+        <div id="subject-form" class="section hidden">
+            <label for="subject-name">Enter Subject Name:</label>
+            <input type="text" id="subject-name">
+            <button class="button" onclick="saveSubject()">Save Subject</button>
+            <button class="back-button" onclick="goBackToMenu()">Back to Main Menu</button>
+        </div>
+
+        <div id="grades-form" class="section hidden">
+            <label for="select-subject">Select Subject:</label>
+            <select id="select-subject"></select>
+            <label for="criteria-a">Criteria A (1-8):</label>
+            <input type="number" id="criteria-a" min="1" max="8">
+            <label for="criteria-b">Criteria B (1-8):</label>
+            <input type="number" id="criteria-b" min="1" max="8">
+            <label for="criteria-c">Criteria C (1-8):</label>
+            <input type="number" id="criteria-c" min="1" max="8">
+            <label for="criteria-d">Criteria D (1-8):</label>
+            <input type="number" id="criteria-d" min="1" max="8">
+            <button class="button" onclick="saveGrades()">Save Grades</button>
+            <button class="back-button" onclick="goBackToMenu()">Back to Main Menu</button>
+        </div>
+
+        <div id="report-card" class="section hidden">
+            <h2>Predicted Report Card</h2>
+            <ul id="report-list"></ul>
+            <button class="back-button" onclick="goBackToMenu()">Back to Main Menu</button>
+        </div>
+    </div>
+
+    <script>
+        let subjects = [];
+
+        function addNewSubject() {
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('subject-form').style.display = 'block';
+        }
+
+        function saveSubject() {
+            const subjectName = document.getElementById('subject-name').value;
+            if (subjectName.trim()) {
+                subjects.push({ name: subjectName, grades: [null, null, null, null] });
+                alert('Subject added!');
+                document.getElementById('subject-name').value = '';
+                goBackToMenu();
+            }
+        }
+
+        function enterGrades() {
+            if (subjects.length === 0) {
+                alert('No subjects found. Please add a subject first.');
+                return;
+            }
+
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('grades-form').style.display = 'block';
+
+            const selectSubject = document.getElementById('select-subject');
+            selectSubject.innerHTML = ''; // Reset options
+            subjects.forEach((subject, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = subject.name;
+                selectSubject.appendChild(option);
+            });
+        }
+
+        function saveGrades() {
+            const subjectIndex = document.getElementById('select-subject').value;
+            const grades = [
+                parseInt(document.getElementById('criteria-a').value),
+                parseInt(document.getElementById('criteria-b').value),
+                parseInt(document.getElementById('criteria-c').value),
+                parseInt(document.getElementById('criteria-d').value)
+            ];
+
+            if (grades.every(grade => grade >= 1 && grade <= 8)) {
+                subjects[subjectIndex].grades = grades;
+                alert('Grades saved!');
+                goBackToMenu();
+            } else {
+                alert('Please enter valid grades between 1 and 8.');
+            }
+        }
+
+        function viewReportCard() {
+            if (subjects.length === 0) {
+                alert('No subjects found. Please add a subject first.');
+                return;
+            }
+
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('report-card').style.display = 'block';
+
+            const reportList = document.getElementById('report-list');
+            reportList.innerHTML = ''; // Reset the list
+            subjects.forEach(subject => {
+                const total = subject.grades.reduce((a, b) => a + b, 0);
+                const finalGrade = getFinalGrade(total);
+                const li = document.createElement('li');
+                li.textContent = `${subject.name}: Total = ${total}, Final Grade = ${finalGrade}`;
+                reportList.appendChild(li);
+            });
+        }
+
+        function getFinalGrade(total) {
+            if (total >= 28) return 7;
+            if (total >= 24) return 6;
+            if (total >= 19) return 5;
+            if (total >= 15) return 4;
+            if (total >= 10) return 3;
+            if (total >= 6) return 2;
+            return 1;
+        }
+
+        function goBackToMenu() {
+            document.getElementById('menu').style.display = 'block';
+            document.getElementById('subject-form').style.display = 'none';
+            document.getElementById('grades-form').style.display = 'none';
+            document.getElementById('report-card').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
